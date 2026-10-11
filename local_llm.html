@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ollama + Qwen3:14B + Open WebUI on macOS - LLM Observatory</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <style>
+    body { background-color: #f8f9fa; color: #212529; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .content-container { max-width: 900px; margin: 2rem auto; background: #ffffff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1, h2, h3 { color: #111827; margin-top: 1.5em; }
+    h1 { margin-top: 0; font-size: 2.2rem; font-weight: 700; }
+    h2 { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; font-size: 1.5rem; }
+    h3 { font-size: 1.2rem; }
+    pre { background-color: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    code { font-family: SFMono-Regular, Consolas, Monaco, monospace; font-size: 90%; }
+    p code, li code { background-color: #f3f4f6; color: #e11d48; padding: 0.2em 0.4em; border-radius: 4px; }
+    pre code { background-color: transparent; color: #f3f4f6; padding: 0; }
+    blockquote { border-left: 4px solid #3b82f6; background: #eff6ff; padding: 1rem; margin: 1.5rem 0; border-radius: 4px; color: #1e40af; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1.5rem; }
+    li { margin-bottom: 0.4rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Placeholder -->
+  <div id="nav-placeholder"></div>
+
+  <!-- Page Content Container -->
+  <main class="container">
+    <div class="content-container">
+      
+      <h1>Ollama + Qwen3:14B + Open WebUI on macOS</h1>
+      <p class="lead text-muted">Run a local language model on your Mac and chat with it in your browser.</p>
+
+      <ul>
+        <li><strong>Runtime:</strong> Ollama</li>
+        <li><strong>Model:</strong> <code>qwen3:14b</code> (about 9.3 GB to download)</li>
+        <li><strong>Web interface:</strong> Open WebUI in Docker</li>
+        <li><strong>Local URLs:</strong> Ollama API at <code>http://localhost:11434</code>; WebUI at <code>http://localhost:3000</code></li>
+      </ul>
+
+      <blockquote>
+        <strong>Hardware note:</strong> <code>qwen3:14b</code> is a quantized model, not a 14 GB download. Allow at least 15–20 GB of free disk space for the model and working room. A Mac with 16 GB unified memory may run it, but 24 GB or more is more comfortable, especially with other apps open. Performance depends on your Mac. Apple Silicon is recommended; Intel Macs run Ollama on CPU and may be much slower.
+      </blockquote>
+
+      <h2>1. Requirements</h2>
+      <ul>
+        <li>macOS 14 Sonoma or newer (check the current Ollama macOS requirements)</li>
+        <li>Internet connection for the initial downloads</li>
+        <li>Docker Desktop for Mac</li>
+        <li>Administrator rights to install apps</li>
+        <li>Ideally 24 GB+ unified memory and 15–20 GB free storage</li>
+      </ul>
+      <p>Check your Mac model and memory: <strong>Apple menu → About This Mac</strong>.</p>
+
+      <h2>2. Install Ollama</h2>
+      <ol>
+        <li>Open the official download page: <a href="https://ollama.com/download" target="_blank">https://ollama.com/download</a></li>
+        <li>Download the macOS app, open the <code>.dmg</code>, and drag <strong>Ollama</strong> into <strong>Applications</strong>.</li>
+        <li>Launch Ollama from Applications. Approve any macOS prompts and allow it to install its command-line tool if prompted.</li>
+        <li>Open <strong>Terminal</strong> and verify:</li>
+      </ol>
+      <pre><code class="language-bash">ollama --version</code></pre>
+      <p>If <code>ollama</code> is not found, quit and reopen Terminal after launching Ollama. Check the official macOS instructions: <a href="https://github.com/ollama/ollama/blob/main/docs/macos.mdx" target="_blank">https://github.com/ollama/ollama/blob/main/docs/macos.mdx</a>.</p>
+
+      <h2>3. Download and test Qwen3:14B</h2>
+      <p>In Terminal, run:</p>
+      <pre><code class="language-bash">ollama pull qwen3:14b</code></pre>
+      <p>This downloads the model (currently about 9.3 GB; size can change). Then start a chat:</p>
+      <pre><code class="language-bash">ollama run qwen3:14b</code></pre>
+      <p>Try a prompt, for example:</p>
+      <pre><code>Explain how local language models work in simple terms.</code></pre>
+      <p>Type <code>/bye</code> to leave the model chat. Check that the model is present:</p>
+      <pre><code class="language-bash">ollama list</code></pre>
+      <p>Official model page: <a href="https://ollama.com/library/qwen3:14b" target="_blank">https://ollama.com/library/qwen3:14b</a>.</p>
+
+      <h2>4. Install Docker Desktop</h2>
+      <ol>
+        <li>Download Docker Desktop for Mac: <a href="https://www.docker.com/products/docker-desktop/" target="_blank">https://www.docker.com/products/docker-desktop/</a></li>
+        <li>Install and launch it.</li>
+        <li>Wait until Docker Desktop says it is running.</li>
+        <li>Verify in Terminal:</li>
+      </ol>
+      <pre><code class="language-bash">docker --version
+docker info</code></pre>
+      <p>If <code>docker info</code> errors, start Docker Desktop and try again.</p>
+
+      <h2>5. Start Open WebUI</h2>
+      <p>Ollama runs directly on macOS; Open WebUI runs in a Docker container. This is a straightforward local setup.</p>
+
+      <h3>5.1 Create a persistent secret key</h3>
+      <p>Generate a secret:</p>
+      <pre><code class="language-bash">openssl rand -hex 32</code></pre>
+      <p>Copy the output into a password manager or a safe local note. You will use the same value when recreating/updating the container. Do not publish it or commit it to a repository.</p>
+
+      <h3>5.2 Run the WebUI container</h3>
+      <p>Replace <code>PASTE_YOUR_SECRET_HERE</code> with the generated value, then run:</p>
+      <pre><code class="language-bash">docker run -d \
+  --name open-webui \
+  --restart unless-stopped \
+  -p 127.0.0.1:3000:8080 \
+  --add-host=host.docker.internal:host-gateway \
+  -v open-webui:/app/backend/data \
+  -e WEBUI_SECRET_KEY='PASTE_YOUR_SECRET_HERE' \
+  ghcr.io/open-webui/open-webui:main</code></pre>
+      
+      <p><strong>Notes:</strong></p>
+      <ul>
+        <li>The <code>open-webui</code> volume preserves chats and settings across container replacements.</li>
+        <li>Binding to <code>127.0.0.1</code> keeps the web interface accessible only from this Mac by default.</li>
+        <li>Keep the same <code>WEBUI_SECRET_KEY</code> when recreating the container, or existing sessions may be invalidated.</li>
+        <li>The <code>main</code> image is updated over time. For a more reproducible setup, use a specific stable version tag from the official documentation.</li>
+      </ul>
+
+      <p>Check startup logs:</p>
+      <pre><code class="language-bash">docker logs -f open-webui</code></pre>
+      <p>Wait for startup to complete, then press <code>Ctrl+C</code> to stop following the logs (this does not stop the container).</p>
+      <p>Official setup guide: <a href="https://docs.openwebui.com/getting-started/quick-start/" target="_blank">https://docs.openwebui.com/getting-started/quick-start/</a>.</p>
+
+      <h2>6. Open the chat interface</h2>
+      <ol>
+        <li>Make sure Ollama is running on the Mac and the model has been downloaded.</li>
+        <li>Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a> in your browser.</li>
+        <li>Create the first Open WebUI account. On a new instance, the first account is typically the administrator.</li>
+        <li>Start a new chat and choose <strong><code>qwen3:14b</code></strong> from the model selector.</li>
+        <li>Send a test prompt.</li>
+      </ol>
+      <p>If the model does not appear, open <strong>Admin Settings → Connections</strong> and verify the Ollama connection. With the Docker command above, Open WebUI should reach Ollama at:</p>
+      <pre><code>http://host.docker.internal:11434</code></pre>
+      <p>Do not use <code>localhost:11434</code> inside the container; there, <code>localhost</code> refers to the container itself.</p>
+
+      <h2>7. Quick health checks</h2>
+      <h3>Check Ollama's API</h3>
+      <pre><code class="language-bash">curl http://localhost:11434/api/tags</code></pre>
+      <p>The output should include <code>qwen3:14b</code>.</p>
+
+      <h3>Check the WebUI container</h3>
+      <pre><code class="language-bash">docker ps
+docker logs --tail 100 open-webui</code></pre>
+
+      <h3>Test model generation without the browser</h3>
+      <pre><code class="language-bash">curl http://localhost:11434/api/chat \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "model": "qwen3:14b",
+    "messages": [
+      {"role": "user", "content": "Reply with: Local model is working."}
+    ],
+    "stream": false
+  }'</code></pre>
+
+      <h2>8. Common issues</h2>
+      <h3>Model download is slow or fails</h3>
+      <ul>
+        <li>Check your internet connection and available disk space.</li>
+        <li>Retry with <code>ollama pull qwen3:14b</code>.</li>
+        <li>Keep the Mac awake until the download finishes.</li>
+      </ul>
+
+      <h3>WebUI says no models are available</h3>
+      <ul>
+        <li>Confirm Ollama works with <code>ollama list</code>.</li>
+        <li>Confirm the API responds: <code>curl http://localhost:11434/api/tags</code>.</li>
+        <li>In Open WebUI, verify the Ollama URL is <code>http://host.docker.internal:11434</code>.</li>
+        <li>Restart the WebUI container after checking its logs:</li>
+      </ul>
+      <pre><code class="language-bash">docker restart open-webui</code></pre>
+
+      <h3>Port 3000 is already in use</h3>
+      <p>Change the left side of the port mapping, for example <code>-p 127.0.0.1:3001:8080</code>, then open <a href="http://localhost:3001" target="_blank">http://localhost:3001</a>. If the container already exists, remove/recreate it (your named volume will preserve data).</p>
+
+      <h3>Model runs slowly or the Mac becomes hot</h3>
+      <ul>
+        <li>Close memory-heavy apps.</li>
+        <li>Start with shorter prompts and avoid very long conversations.</li>
+        <li>If performance is not acceptable, try a smaller model such as <code>qwen3:8b</code>:</li>
+      </ul>
+      <pre><code class="language-bash">ollama pull qwen3:8b
+ollama run qwen3:8b</code></pre>
+
+      <h3>Container won't start</h3>
+      <pre><code class="language-bash">docker logs --tail 200 open-webui
+docker ps -a</code></pre>
+
+      <h2>9. Start, stop, and update</h2>
+      <h3>Stop / start WebUI</h3>
+      <pre><code class="language-bash">docker stop open-webui
+docker start open-webui</code></pre>
+      <p>Ollama can be quit from the macOS menu bar app; launch it again when needed.</p>
+
+      <h3>Update Open WebUI</h3>
+      <p>The following replaces the container but keeps the <code>open-webui</code> data volume. Use the <strong>same secret key</strong> as before:</p>
+      <pre><code class="language-bash">docker pull ghcr.io/open-webui/open-webui:main
+docker rm -f open-webui
+docker run -d \
+  --name open-webui \
+  --restart unless-stopped \
+  -p 127.0.0.1:3000:8080 \
+  --add-host=host.docker.internal:host-gateway \
+  -v open-webui:/app/backend/data \
+  -e WEBUI_SECRET_KEY='PASTE_THE_SAME_SECRET_HERE' \
+  ghcr.io/open-webui/open-webui:main</code></pre>
+      <p>Update Ollama through the Ollama app/download page. Update the model separately if desired:</p>
+      <pre><code class="language-bash">ollama pull qwen3:14b</code></pre>
+
+      <h3>Remove WebUI</h3>
+      <p>This removes the container but keeps saved chats/settings in the named volume:</p>
+      <pre><code class="language-bash">docker rm -f open-webui</code></pre>
+      <p>To <strong>permanently delete</strong> WebUI data as well, run this only if you are sure you no longer need it:</p>
+      <pre><code class="language-bash">docker volume rm open-webui</code></pre>
+      <p>To remove the model and reclaim its disk space:</p>
+      <pre><code class="language-bash">ollama rm qwen3:14b</code></pre>
+
+      <h2>10. Privacy and network notes</h2>
+      <ul>
+        <li>Model inference runs locally, but initial downloads require the internet.</li>
+        <li>Keep the WebUI bound to <code>127.0.0.1</code> unless you intentionally want other devices to access it.</li>
+        <li>Do not expose Ollama's port (<code>11434</code>) or Open WebUI to the public internet without a deliberate, secured network design.</li>
+        <li>If you enable web search, external APIs, or cloud models in Open WebUI, those features can send data outside your Mac. A local model by itself does not require sending prompts to a model provider.</li>
+        <li>Create an Open WebUI login and keep the secret key private.</li>
+      </ul>
+
+      <h2>Official references</h2>
+      <ul>
+        <li>Ollama for macOS: <a href="https://ollama.com/download" target="_blank">https://ollama.com/download</a></li>
+        <li>Ollama macOS notes: <a href="https://github.com/ollama/ollama/blob/main/docs/macos.mdx" target="_blank">https://github.com/ollama/ollama/blob/main/docs/macos.mdx</a></li>
+        <li>Qwen3:14B model: <a href="https://ollama.com/library/qwen3:14b" target="_blank">https://ollama.com/library/qwen3:14b</a></li>
+        <li>Open WebUI quick start: <a href="https://docs.openwebui.com/getting-started/quick-start/" target="_blank">https://docs.openwebui.com/getting-started/quick-start/</a></li>
+        <li>Docker Desktop for Mac: <a href="https://www.docker.com/products/docker-desktop/" target="_blank">https://www.docker.com/products/docker-desktop/</a></li>
+      </ul>
+
+    </div>
+  </main>
+
+  <!-- Script to load nav.html dynamically -->
+  <script>
+    fetch('nav.html')
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+      })
+      .then(data => {
+        document.getElementById('nav-placeholder').innerHTML = data;
+      })
+      .catch(error => console.error('Error loading navigation:', error));
+  </script>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

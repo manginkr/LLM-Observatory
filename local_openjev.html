@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install OpenJev on macOS with local Ollama qwen3:14b - LLM Observatory</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <style>
+    body { background-color: #f8f9fa; color: #212529; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .content-container { max-width: 900px; margin: 2rem auto; background: #ffffff; padding: 2.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h1, h2, h3 { color: #111827; margin-top: 1.5em; }
+    h1 { margin-top: 0; font-size: 2.2rem; font-weight: 700; }
+    h2 { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.3em; font-size: 1.5rem; }
+    h3 { font-size: 1.2rem; }
+    pre { background-color: #1f2937; color: #f3f4f6; padding: 1rem; border-radius: 6px; overflow-x: auto; }
+    code { font-family: SFMono-Regular, Consolas, Monaco, monospace; font-size: 90%; }
+    p code, li code { background-color: #f3f4f6; color: #e11d48; padding: 0.2em 0.4em; border-radius: 4px; }
+    pre code { background-color: transparent; color: #f3f4f6; padding: 0; }
+    blockquote { border-left: 4px solid #3b82f6; background: #eff6ff; padding: 1rem; margin: 1.5rem 0; border-radius: 4px; color: #1e40af; }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1.5rem; }
+    li { margin-bottom: 0.4rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Placeholder -->
+  <div id="nav-placeholder"></div>
+
+  <!-- Page Content Container -->
+  <main class="container">
+    <div class="content-container">
+      
+      <h1>Install OpenJev on macOS with local Ollama <code>qwen3:14b</code></h1>
+      <p class="lead text-muted">This guide configures <strong>OpenJev</strong> to use an Ollama model already installed on your Mac. It avoids OpenJev's built-in model-download path and does not configure Hugging Face or cloud-model providers.</p>
+
+      <blockquote>
+        <strong>Important distinction:</strong> the first installation of Homebrew packages, Python dependencies, OpenJev source code, and the Ollama model normally requires internet access. Once everything is installed, inference can run locally. This guide does not promise that every dependency installer is network-free.
+      </blockquote>
+
+      <h2>1. What you are setting up</h2>
+      <ul>
+        <li><strong>OpenJev</strong>: a decision engine that returns structured choices, yes/no probabilities, or scores.</li>
+        <li><strong>Ollama</strong>: runs the model locally on your Mac.</li>
+        <li><strong>Model</strong>: <code>qwen3:14b</code>, downloaded once into Ollama's local model store.</li>
+        <li><strong>Local endpoint</strong>: OpenJev connects to <code>http://localhost:11434/v1</code>, not to a hosted model provider.</li>
+      </ul>
+      <p>OpenJev is not a conventional free-form chat interface. Its main interface is for structured decisions.</p>
+
+      <h2>2. Check your Mac</h2>
+      <p>Open Terminal and run:</p>
+      <pre><code class="language-bash">uname -m
+sw_vers</code></pre>
+      <p>On Apple Silicon, <code>uname -m</code> should print <code>arm64</code>. The 14B model can require substantial unified memory; performance depends on your Mac's RAM, model quantization and other running applications. If the model does not fit comfortably, use a smaller model rather than assuming it will run well.</p>
+
+      <h2>3. Install Ollama and download the model once</h2>
+      <p>Install Ollama from its official website, then open the Ollama app:</p>
+      <p><a href="https://ollama.com/download/mac" target="_blank" rel="noopener">https://ollama.com/download/mac</a></p>
+
+      <p>In Terminal:</p>
+      <pre><code class="language-bash">ollama pull qwen3:14b
+ollama list</code></pre>
+      <p>The first command downloads the model into Ollama. This is an Ollama model pull, not OpenJev downloading model files from Hugging Face.</p>
+
+      <p>Check that Ollama responds locally:</p>
+      <pre><code class="language-bash">curl http://localhost:11434/api/tags</code></pre>
+      <p>You should see the locally installed model in the response. You can also test the model directly:</p>
+      <pre><code class="language-bash">ollama run qwen3:14b</code></pre>
+      <p>Type a short test prompt, then enter <code>/bye</code> to exit.</p>
+
+      <h2>4. Install OpenJev</h2>
+      <p>Install the tools needed to retrieve the source and manage its Python environment. If you already have Homebrew and <code>uv</code>, skip the corresponding install steps.</p>
+      <p>Homebrew: <a href="https://brew.sh/" target="_blank" rel="noopener">https://brew.sh/</a></p>
+      <pre><code class="language-bash">brew install git uv</code></pre>
+
+      <p>Clone the OpenJev project:</p>
+      <pre><code class="language-bash">git clone https://github.com/lookski/openjev.git
+cd openjev</code></pre>
+
+      <p>Install the project in its local virtual environment:</p>
+      <pre><code class="language-bash">uv sync</code></pre>
+      <p>If the repository's current README specifies an extra for the Ollama/API-compatible backend, follow that project's current installation instructions. Do not run OpenJev's built-in local-model setup or Hugging Face model download commands for this configuration.</p>
+
+      <h2>5. Run OpenJev using only local Ollama</h2>
+      <p>First ensure the Ollama app is running and <code>ollama list</code> shows <code>qwen3:14b</code>.</p>
+      <p>Use OpenJev's explicit Ollama backend and model setting rather than its interactive provider-selection wizard:</p>
+      <pre><code class="language-bash">uv run openjev-easy --backend ollama --model qwen3:14b</code></pre>
+
+      <p>The documented Ollama-compatible endpoint is <code>http://localhost:11434/v1</code>. If your OpenJev version asks for a base URL, use:</p>
+      <pre><code>http://localhost:11434/v1</code></pre>
+      <p>Do not enter an OpenAI, OpenRouter, Jev cloud, or other remote API key. Do not select a remote backend.</p>
+
+      <p>For a one-shot test, the project documents this pattern:</p>
+      <pre><code class="language-bash">uv run openjev-easy --backend ollama --model qwen3:14b --once "The server is down and customers cannot log in."</code></pre>
+      <p>The exact command options can change between OpenJev revisions. If a flag is rejected, check the locally installed command's help:</p>
+      <pre><code class="language-bash">uv run openjev-easy --help</code></pre>
+
+      <h2>6. Verify the local-only configuration</h2>
+      <p>Before sending any real data:</p>
+      <ol>
+        <li>Confirm <code>ollama list</code> shows <code>qwen3:14b</code>.</li>
+        <li>Confirm the configured backend is <code>ollama</code>.</li>
+        <li>Confirm the base URL, if shown, is <code>http://localhost:11434/v1</code>.</li>
+        <li>Leave API keys for cloud providers unset.</li>
+        <li>Do not choose OpenJev's <code>local</code> backend if that version's local backend automatically fetches model weights; use the explicit <code>ollama</code> backend.</li>
+        <li>If you need a stronger guarantee, disconnect Wi-Fi after installation and model download, then run a test. If a command fails because it tries to reach a remote service, stop and inspect its configuration rather than switching to an online provider.</li>
+      </ol>
+
+      <h2>7. Start offline after setup</h2>
+      <p>After all packages and the model are installed, start Ollama and run OpenJev while disconnected from the internet:</p>
+      <pre><code class="language-bash">ollama run qwen3:14b</code></pre>
+
+      <p>In another Terminal window, from the OpenJev repository:</p>
+      <pre><code class="language-bash">uv run openjev-easy --backend ollama --model qwen3:14b</code></pre>
+      <p>Use <code>Ctrl+C</code> to stop the OpenJev process. Local inference should continue to work without internet as long as all required software and model files are already present.</p>
+
+
+      <h2>8. Tests and Comparing the Normal LLM to OpenJEV</h2>
+      <p>Under openjev/demo folder, please run the demo</p>
+      <pre><code class="language-bash">python3 explain.py</code></pre>
+
+      <p>Under openjev/demo folder, please run the tests and comparing demos</p>
+      <pre><code class="language-bash">python3 compare.py</code></pre>
+
+      <h2>Troubleshooting</h2>
+      <h3><code>ollama</code> command not found</h3>
+      <p>Open the Ollama app or install it from <a href="https://ollama.com/download/mac" target="_blank" rel="noopener">https://ollama.com/download/mac</a>, then reopen Terminal.</p>
+
+      <h3>Model not found</h3>
+      <p>Run:</p>
+      <pre><code class="language-bash">ollama list
+ollama pull qwen3:14b</code></pre>
+      <p>The pull requires internet if the model is not already cached.</p>
+
+      <h3>Connection refused at port 11434</h3>
+      <p>Make sure Ollama is running, then test:</p>
+      <pre><code class="language-bash">curl http://localhost:11434/api/tags</code></pre>
+
+      <h3>OpenJev prompts for a provider or API key</h3>
+      <p>Exit the wizard and run the explicit command with <code>--backend ollama --model qwen3:14b</code>. Never select a cloud backend for this local-only setup.</p>
+
+      <h3>It is slow or runs out of memory</h3>
+      <p>Close memory-heavy applications and retry. A 14B model is relatively large; smaller Macs may perform better with a smaller model.</p>
+
+      <h2>References</h2>
+      <ul>
+        <li>OpenJev project and backend options: <a href="https://github.com/lookski/openjev" target="_blank" rel="noopener">https://github.com/lookski/openjev</a></li>
+        <li>Ollama for macOS: <a href="https://ollama.com/download/mac" target="_blank" rel="noopener">https://ollama.com/download/mac</a></li>
+        <li>Ollama model library: <a href="https://ollama.com/library/qwen3" target="_blank" rel="noopener">https://ollama.com/library/qwen3</a></li>
+        <li>Homebrew: <a href="https://brew.sh/" target="_blank" rel="noopener">https://brew.sh/</a></li>
+      </ul>
+
+      <hr class="my-4">
+
+      <p><strong>Privacy note:</strong> local inference means prompts are sent to the Ollama process on your Mac rather than a hosted model API. It is still sensible to verify the backend and test while offline before processing sensitive data. Installing or updating software later may contact external services.</p>
+
+    </div>
+  </main>
+
+  <!-- Script to load nav.html dynamically -->
+  <script>
+    fetch('nav.html')
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+      })
+      .then(data => {
+        document.getElementById('nav-placeholder').innerHTML = data;
+      })
+      .catch(error => console.error('Error loading navigation:', error));
+  </script>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
